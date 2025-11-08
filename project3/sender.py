@@ -198,8 +198,6 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
 if __name__ == "__main__":
     args = parse_args()
     filedata = get_filedata(args["infile"])
-
-    # receiver_binding = ("localhost", args["port"])
     receiver_binding = ("", args["port"])
     cs = init_socket(receiver_binding)
     send_reliable(cs, filedata, receiver_binding, args["winsize"])
