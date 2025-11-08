@@ -185,7 +185,6 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
         index = seq_to_msgindex[win_left_edge]
         msg = messages[index]
         m = Msg(win_left_edge, __ACK_UNUSED, msg)
-        print(m)
         cs.sendto(m.serialize(), receiver_binding)
         print("Transmitted {}".format(str(m)))
         return win_left_edge + len(msg)
