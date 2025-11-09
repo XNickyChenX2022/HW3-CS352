@@ -207,7 +207,7 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
                 if last_acked >= first_to_tx and first_to_tx < win_right_edge:
                     first_to_tx = transmit_entire_window_from(first_to_tx)
             else:
-                first_to_tx = transmit_one()
+                transmit_one()
 
             if last_acked == INIT_SEQNO + content_len:
                 break
