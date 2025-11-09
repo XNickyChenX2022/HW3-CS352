@@ -147,12 +147,14 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
     win_left_edge = INIT_SEQNO
     win_right_edge = min(win_left_edge + win_size, INIT_SEQNO + content_len)
 
+    last_acked = INIT_SEQNO
+    first_to_tx = INIT_SEQNO
+
     # Method to transmit all data between window left and
     # right edges. Typically used for just fresh
     # transmissions (retransmissions use transmit_one()).
     def transmit_entire_window_from(left_edge):
         latest_tx = left_edge
-        print(latest_tx)
         while latest_tx < win_right_edge:
             assert latest_tx in seq_to_msgindex
             # TODO: # After transmitting each packet
@@ -165,9 +167,9 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
             #
             # You must also remove the NotImplementedError below.
 
-            index = seq_to_msgindex[win_left_edge]
+            index = seq_to_msgindex[latest_tx]
             msg = messages[index]
-            m = Msg(win_left_edge, __ACK_UNUSED, msg)
+            m = Msg(latest_tx, __ACK_UNUSED, msg)
             if latest_tx + len(msg) <= win_right_edge:
                 cs.sendto(m.serialize(), receiver_binding)
                 latest_tx += len(msg)
@@ -191,7 +193,7 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
 
     # TODO: This is where you will make the rest of your changes.
     while win_left_edge < INIT_SEQNO + content_len:
-        transmit_one()
+        transmit_entire_window_from(first_to_tx)
         while True:
             rs_list, _, _ = select.select([cs], [], [], RTO)
             if rs_list:
@@ -199,12 +201,18 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
                 data_from_receiver, receiver_addr = r.recvfrom(100)
                 ack_msg = Msg.deserialize(data_from_receiver)
                 print("Received {}".format(str(ack_msg)))
-                win_left_edge = ack_msg.ack
-                if win_left_edge >= INIT_SEQNO + content_len:
-                    break
-                transmit_one()
+                if ack_msg.ack > last_acked:
+                    win_left_edge = last_acked
+                    win_right_edge = min(
+                        win_left_edge + win_size, INIT_SEQNO + content_len
+                    )
+                    if first_to_tx < win_right_edge:
+                        first_to_tx = transmit_entire_window_from(first_to_tx)
             else:
-                transmit_one()
+                first_to_tx = transmit_one()
+
+            if last_acked == INIT_SEQNO + content_len:
+                break
 
 
 if __name__ == "__main__":
