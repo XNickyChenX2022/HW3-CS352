@@ -193,7 +193,7 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
 
     # TODO: This is where you will make the rest of your changes.
     while win_left_edge < INIT_SEQNO + content_len:
-        transmit_entire_window_from(first_to_tx)
+        first_to_tx = transmit_entire_window_from(first_to_tx)
         while True:
             rs_list, _, _ = select.select([cs], [], [], RTO)
             if rs_list:
@@ -201,13 +201,11 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
                 data_from_receiver, receiver_addr = r.recvfrom(100)
                 ack_msg = Msg.deserialize(data_from_receiver)
                 print("Received {}".format(str(ack_msg)))
-                if ack_msg.ack > last_acked:
-                    win_left_edge = last_acked
-                    win_right_edge = min(
-                        win_left_edge + win_size, INIT_SEQNO + content_len
-                    )
-                    if first_to_tx < win_right_edge:
-                        first_to_tx = transmit_entire_window_from(first_to_tx)
+                last_acked = max(last_acked, ack_msg.ack)
+                win_left_edge = last_acked
+                win_right_edge = min(win_left_edge + win_size, INIT_SEQNO + content_len)
+                if last_acked >= first_to_tx and first_to_tx < win_right_edge:
+                    first_to_tx = transmit_entire_window_from(first_to_tx)
             else:
                 first_to_tx = transmit_one()
 
