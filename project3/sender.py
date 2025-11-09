@@ -191,7 +191,7 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
 
     # TODO: This is where you will make the rest of your changes.
     while win_left_edge < INIT_SEQNO + content_len:
-        win_left_edge = transmit_one()
+        transmit_one()
         while True:
             rs_list, _, _ = select.select([cs], [], [], RTO)
             if rs_list:
@@ -210,9 +210,7 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
 if __name__ == "__main__":
     args = parse_args()
     filedata = get_filedata(args["infile"])
-
-    receiver_binding = ("localhost", args["port"])
-    # receiver_binding = ("", args["port"])
+    receiver_binding = ("", args["port"])
     cs = init_socket(receiver_binding)
     send_reliable(cs, filedata, receiver_binding, args["winsize"])
     cs.close()
