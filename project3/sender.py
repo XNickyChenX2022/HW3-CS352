@@ -173,7 +173,7 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
                 latest_tx += len(msg)
             else:
                 break
-            # print("Transmitted {}".format(str(m)))
+            print("Transmitted {}".format(str(m)))
         return latest_tx
 
     # Transmit one packet from the left edge of the
@@ -192,12 +192,27 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
     # TODO: This is where you will make the rest of your changes.
     while win_left_edge < INIT_SEQNO + content_len:
         win_left_edge = transmit_one()
+        while True:
+            rs_list, _, _ = select.select([cs], [], [], RTO)
+            if rs_list:
+                r = rs_list[0]
+                data_from_receiver, receiver_addr = r.recvfrom(100)
+                ack_msg = Msg.deserialize(data_from_receiver)
+                print("Received {}".format(str(ack_msg)))
+                win_left_edge = ack_msg.ack
+                if win_left_edge >= INIT_SEQNO + content_len:
+                    break
+                transmit_one()
+            else:
+                transmit_one()
 
 
 if __name__ == "__main__":
     args = parse_args()
     filedata = get_filedata(args["infile"])
-    receiver_binding = ("", args["port"])
+
+    receiver_binding = ("localhost", args["port"])
+    # receiver_binding = ("", args["port"])
     cs = init_socket(receiver_binding)
     send_reliable(cs, filedata, receiver_binding, args["winsize"])
     cs.close()

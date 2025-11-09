@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "Python: sender",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/project3/sender.py",
+            "cwd": "${workspaceFolder}/project3"
+        }
+    ]
+}
