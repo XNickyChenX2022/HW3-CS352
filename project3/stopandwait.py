@@ -152,7 +152,6 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
     # transmissions (retransmissions use transmit_one()).
     def transmit_entire_window_from(left_edge):
         latest_tx = left_edge
-        print(latest_tx)
         while latest_tx < win_right_edge:
             assert latest_tx in seq_to_msgindex
             # TODO: # After transmitting each packet
@@ -165,9 +164,9 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
             #
             # You must also remove the NotImplementedError below.
 
-            index = seq_to_msgindex[win_left_edge]
+            index = seq_to_msgindex[latest_tx]
             msg = messages[index]
-            m = Msg(win_left_edge, __ACK_UNUSED, msg)
+            m = Msg(latest_tx, __ACK_UNUSED, msg)
             if latest_tx + len(msg) <= win_right_edge:
                 cs.sendto(m.serialize(), receiver_binding)
                 latest_tx += len(msg)
