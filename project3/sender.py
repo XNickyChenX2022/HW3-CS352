@@ -204,7 +204,9 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
                 last_acked = max(last_acked, ack_msg.ack)
                 win_left_edge = last_acked
                 win_right_edge = min(win_left_edge + win_size, INIT_SEQNO + content_len)
-                if last_acked >= first_to_tx and first_to_tx < win_right_edge:
+                # if last_acked >= first_to_tx and first_to_tx < win_right_edge:
+
+                if first_to_tx < win_right_edge:
                     first_to_tx = transmit_entire_window_from(first_to_tx)
             else:
                 transmit_one()
